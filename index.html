@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Members Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ================== IMPROVED CSS ================== */
+:root {
+  --primary-color: #006291;
+  --secondary-color: #004a6e;
+  --text-color: #333;
+  --light-gray: #f4f6f8;
+  --border-color: #ddd;
+  --error-color: #dc3545;
+  --success-color: #28a745;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--light-gray);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.app {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--primary-color);
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 3px 8px rgba(0, 98, 145, 0.2);
+}
+
+.add-btn:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+/* Grid */
+.members-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+}
+
+.member-count {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.member-card {
+  background: #fff;
+  padding: 25px 15px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-height: 180px;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.member-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--light-gray);
+  margin-bottom: 15px;
+}
+
+.member-card h4 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Empty state */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Form */
+.form-section {
+  background: #fff;
+  padding: 25px;
+  border-radius: 16px;
+  margin-top: 25px;
+  box-shadow: var(--card-shadow);
+}
+
+.form-section h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  font-size: 20px;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 98, 145, 0.1);
+}
+
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-input-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--light-gray);
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: var(--transition);
+  justify-content: center;
+}
+
+.file-input-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Camera button styles */
+.file-input-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.camera-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.camera-btn:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.camera-btn i {
+  font-size: 16px;
+}
+
+.file-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-selection p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.file-name {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.submit-btn, .cancel-btn {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.submit-btn {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.submit-btn:hover {
+  background: var(--secondary-color);
+}
+
+.cancel-btn {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid var(--border-color);
+}
+
+.cancel-btn:hover {
+  background: #e9ecef;
+}
+
+.error-msg {
+  color: var(--error-color);
+  font-size: 14px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.success-msg {
+  color: var(--success-color);
+  font-size: 14px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: #fff;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px;
+  border-radius: 16px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  transition: var(--transition);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 20px;
+  object-fit: cover;
+  border: 5px solid var(--light-gray);
+}
+
+.modal h3 {
+  text-align: center;
+  margin: 0 0 25px 0;
+  color: var(--primary-color);
+  font-size: 24px;
+}
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-item i {
+  width: 24px;
+  color: var(--primary-color);
+}
+
+.aadhaar-section {
+  margin-top: 30px;
+}
+
+.aadhaar-section h4 {
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.aadhaar-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.aadhaar-img-wrapper {
+  text-align: center;
+}
+
+.aadhaar-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.aadhaar-img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.aadhaar-img:hover {
+  transform: scale(1.02);
+}
+
+/* Camera modal specific styles */
+.camera-container {
+  position: relative;
+}
+
+#cameraPreview {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  background: #000;
+  border-radius: 10px;
+}
+
+.camera-controls {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .member-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .member-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .aadhaar-images {
+    grid-template-columns: 1fr;
+  }
+  
+  .file-input-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .camera-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 15px;
+  }
+  
+  .member-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .add-btn {
+    justify-content: center;
+  }
+  
+  .member-card {
+    aspect-ratio: auto;
+    min-height: 160px;
+    padding: 20px 15px;
+  }
+  
+  .member-card img {
+    width: 70px;
+    height: 70px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <h2>Members Management</h2>
+    <button id="openFormBtn" class="add-btn">
+      <i class="fas fa-user-plus"></i>
+      <span>Add New Member</span>
+    </button>
+  </header>
+
+  <!-- Members Grid -->
+  <section class="members-container">
+    <div class="member-count" id="memberCount">0 members</div>
+    <div id="memberGrid" class="member-grid"></div>
+  </section>
+
+  <!-- Add Member Form -->
+  <section id="formSection" class="form-section hidden">
+    <h3>Add New Member</h3>
+
+    <form id="memberForm">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" placeholder="Enter full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="mobile">Mobile Number *</label>
+        <input type="tel" id="mobile" placeholder="Enter 10-digit mobile number" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" placeholder="Enter email address" required>
+      </div>
+
+      <!-- Profile Photo with Camera Option -->
+      <div class="form-group">
+        <label>Profile Photo *</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn">
+            <i class="fas fa-camera"></i>
+            <span>Choose Profile Photo</span>
+          </div>
+          <input type="file" id="profilePhoto" accept="image/*" required>
+        </div>
+        <div class="file-input-container">
+          <button type="button" class="camera-btn" onclick="openCamera(document.getElementById('profilePhoto'))">
+            <i class="fas fa-camera"></i> Take Photo
+          </button>
+          <div class="file-selection">
+            <p>Or select from gallery</p>
+          </div>
+        </div>
+        <div id="profilePhotoName" class="file-name"></div>
+      </div>
+
+      <!-- Aadhaar Front with Camera Option -->
+      <div class="form-group">
+        <label>Aadhaar Card – Front *</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn">
+            <i class="fas fa-id-card"></i>
+            <span>Choose Aadhaar Front</span>
+          </div>
+          <input type="file" id="aadhaarFront" accept="image/*" required>
+        </div>
+        <div class="file-input-container">
+          <button type="button" class="camera-btn" onclick="openCamera(document.getElementById('aadhaarFront'))">
+            <i class="fas fa-camera"></i> Capture Front
+          </button>
+          <div class="file-selection">
+            <p>Or select from gallery</p>
+          </div>
+        </div>
+        <div id="aadhaarFrontName" class="file-name"></div>
+      </div>
+
+      <!-- Aadhaar Back with Camera Option -->
+      <div class="form-group">
+        <label>Aadhaar Card – Back *</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn">
+            <i class="fas fa-id-card"></i>
+            <span>Choose Aadhaar Back</span>
+          </div>
+          <input type="file" id="aadhaarBack" accept="image/*" required>
+        </div>
+        <div class="file-input-container">
+          <button type="button" class="camera-btn" onclick="openCamera(document.getElementById('aadhaarBack'))">
+            <i class="fas fa-camera"></i> Capture Back
+          </button>
+          <div class="file-selection">
+            <p>Or select from gallery</p>
+          </div>
+        </div>
+        <div id="aadhaarBackName" class="file-name"></div>
+      </div>
+
+      <div id="formMessages"></div>
+
+      <div class="form-actions">
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-check"></i> Save Member
+        </button>
+        <button type="button" class="cancel-btn" id="cancelFormBtn">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </form>
+  </section>
+
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="modal hidden">
+  <div class="modal-content">
+    <button class="close-btn" id="closeModal">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <img id="modalProfileImg" class="profile-img">
+    <h3 id="modalName"></h3>
+
+    <div class="modal-info">
+      <div class="info-item">
+        <i class="fas fa-phone"></i>
+        <span><strong>Mobile:</strong> <span id="modalMobile"></span></span>
+      </div>
+      <div class="info-item">
+        <i class="fas fa-envelope"></i>
+        <span><strong>Email:</strong> <span id="modalEmail"></span></span>
+      </div>
+    </div>
+
+    <div class="aadhaar-section">
+      <h4>Aadhaar Card</h4>
+      <div class="aadhaar-images">
+        <div class="aadhaar-img-wrapper">
+          <div class="aadhaar-label">Front Side</div>
+          <img id="modalAadhaarFront" class="aadhaar-img">
+        </div>
+        <div class="aadhaar-img-wrapper">
+          <div class="aadhaar-label">Back Side</div>
+          <img id="modalAadhaarBack" class="aadhaar-img">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== JSONBin.io WITH IMAGE PATH STORAGE ================== */
+
+// ⚙️ CONFIGURATION - REPLACE THESE WITH YOUR VALUES
+const JSONBIN_CONFIG = {
+  BIN_ID: '69480018ae596e708fa89185',
+  MASTER_KEY: '$2a$10$n.pglrUySD3I.DnHpXC3eeCFtcHmmW36bLXKvZxG5qJu65qhKW7yi',
+  API_URL: 'https://api.jsonbin.io/v3/b'
+};
+
+// DOM Elements
+const openFormBtn = document.getElementById("openFormBtn");
+const cancelFormBtn = document.getElementById("cancelFormBtn");
+const formSection = document.getElementById("formSection");
+const form = document.getElementById("memberForm");
+const grid = document.getElementById("memberGrid");
+const memberCount = document.getElementById("memberCount");
+const formMessages = document.getElementById("formMessages");
+const modal = document.getElementById("profileModal");
+const closeModal = document.getElementById("closeModal");
+
+// File input displays
+const profilePhotoInput = document.getElementById("profilePhoto");
+const aadhaarFrontInput = document.getElementById("aadhaarFront");
+const aadhaarBackInput = document.getElementById("aadhaarBack");
+const profilePhotoName = document.getElementById("profilePhotoName");
+const aadhaarFrontName = document.getElementById("aadhaarFrontName");
+const aadhaarBackName = document.getElementById("aadhaarBackName");
+
+// Global members array (stores metadata only)
+let members = [];
+
+// Camera variables
+let cameraStream = null;
+let currentCameraInput = null;
+
+// Image storage (in localStorage for demo - replace with real server in production)
+const IMAGE_STORAGE = {
+  // Get image from storage
+  getImage: function(imageId) {
+    try {
+      const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
+      return images[imageId] || null;
+    } catch (error) {
+      console.error('Error getting image:', error);
+      return null;
+    }
+  },
+  
+  // Save image to storage (returns image ID)
+  saveImage: function(base64Data, imageType) {
+    try {
+      const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
+      
+      images[imageId] = {
+        data: base64Data,
+        type: imageType,
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem('memberImages', JSON.stringify(images));
+      return imageId;
+    } catch (error) {
+      console.error('Error saving image:', error);
+      return null;
+    }
+  },
+  
+  // Clean up old images (optional)
+  cleanup: function(daysOld = 30) {
+    const cutoff = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
+    const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
+    const updatedImages = {};
+    
+    for (const [id, imageData] of Object.entries(images)) {
+      const timestamp = new Date(imageData.timestamp).getTime();
+      if (timestamp > cutoff) {
+        updatedImages[id] = imageData;
+      }
+    }
+    
+    localStorage.setItem('memberImages', JSON.stringify(updatedImages));
+  }
+};
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', function() {
+  setupEventListeners();
+  loadMembers(); // Load from JSONBin on startup
+  // Optional: Clean up old images every 30 days
+  IMAGE_STORAGE.cleanup(30);
+});
+
+function setupEventListeners() {
+  // Form toggle
+  openFormBtn.addEventListener("click", openForm);
+  cancelFormBtn.addEventListener("click", closeForm);
+
+  // Form submission
+  form.addEventListener("submit", handleFormSubmit);
+
+  // File input handlers
+  profilePhotoInput.addEventListener("change", function(e) {
+    if (e.target.files[0]) {
+      profilePhotoName.textContent = `📸 ${e.target.files[0].name}`;
+    }
+  });
+
+  aadhaarFrontInput.addEventListener("change", function(e) {
+    if (e.target.files[0]) {
+      aadhaarFrontName.textContent = `📸 ${e.target.files[0].name}`;
+    }
+  });
+
+  aadhaarBackInput.addEventListener("change", function(e) {
+    if (e.target.files[0]) {
+      aadhaarBackName.textContent = `📸 ${e.target.files[0].name}`;
+    }
+  });
+
+  // Modal
+  closeModal.addEventListener("click", closeProfileModal);
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal) closeProfileModal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeProfileModal();
+    }
+  });
+}
+
+// ================== CAMERA CAPTURE FUNCTIONS ==================
+
+async function openCamera(inputElement) {
+  try {
+    // Stop any existing camera stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Store which input we're capturing for
+    currentCameraInput = inputElement;
+    
+    // Create camera modal
+    const cameraModal = document.createElement('div');
+    cameraModal.className = 'modal';
+    cameraModal.innerHTML = `
+      <div class="modal-content" style="max-width: 500px;">
+        <button class="close-btn" id="closeCameraModal">
+          <i class="fas fa-times"></i>
+        </button>
+        
+        <h3 style="text-align: center; margin-bottom: 20px;">
+          <i class="fas fa-camera"></i> Take Photo
+        </h3>
+        
+        <div class="camera-container">
+          <video id="cameraPreview" autoplay playsinline 
+                 style="width: 100%; border-radius: 10px; background: #000;"></video>
+          
+          <div class="camera-controls" style="display: flex; gap: 15px; margin-top: 20px; justify-content: center;">
+            <button id="captureBtn" class="submit-btn" style="flex: none; padding: 15px 30px;">
+              <i class="fas fa-camera"></i> Capture
+            </button>
+            <button id="switchCameraBtn" class="cancel-btn" style="flex: none; padding: 15px 20px;">
+              <i class="fas fa-sync-alt"></i> Switch
+            </button>
+          </div>
+          
+          <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
+            Position your document properly and ensure good lighting
+          </p>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(cameraModal);
+    
+    // Get video element and buttons
+    const video = document.getElementById('cameraPreview');
+    const closeBtn = document.getElementById('closeCameraModal');
+    const captureBtn = document.getElementById('captureBtn');
+    const switchBtn = document.getElementById('switchCameraBtn');
+    
+    // Set up camera
+    const constraints = {
+      video: {
+        facingMode: 'environment', // Use back camera by default
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
+    };
+    
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = cameraStream;
+    
+    // Event listeners for camera modal
+    closeBtn.addEventListener('click', () => {
+      closeCameraModal();
+    });
+    
+    captureBtn.addEventListener('click', () => {
+      capturePhoto(video, inputElement);
+    });
+    
+    switchBtn.addEventListener('click', () => {
+      switchCamera(video);
+    });
+    
+    // Close on background click
+    cameraModal.addEventListener('click', function(e) {
+      if (e.target === cameraModal) {
+        closeCameraModal();
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error accessing camera:', error);
+    alert('Unable to access camera. Please check permissions or use file upload instead.');
+  }
+}
+
+function closeCameraModal() {
+  // Stop camera stream
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+  
+  // Remove modal
+  const modal = document.querySelector('.modal .camera-container');
+  if (modal) {
+    modal.closest('.modal').remove();
+  }
+}
+
+async function switchCamera(video) {
+  try {
+    // Stop current stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Get current facing mode
+    const currentConstraints = cameraStream.getVideoTracks()[0].getSettings();
+    const currentFacingMode = currentConstraints.facingMode;
+    
+    // Switch to opposite camera
+    const newConstraints = {
+      video: {
+        facingMode: currentFacingMode === 'user' ? 'environment' : 'user',
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
+    };
+    
+    cameraStream = await navigator.mediaDevices.getUserMedia(newConstraints);
+    video.srcObject = cameraStream;
+    
+  } catch (error) {
+    console.error('Error switching camera:', error);
+  }
+}
+
+function capturePhoto(video, inputElement) {
+  try {
+    // Create canvas to capture photo
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Draw video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to blob
+    canvas.toBlob(function(blob) {
+      // Create file from blob
+      const file = new File([blob], `camera_${Date.now()}.jpg`, {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+      
+      // Create a DataTransfer object to set the file
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      
+      // Set the file to the input
+      inputElement.files = dataTransfer.files;
+      
+      // Update the display name
+      const fileNameElement = inputElement.id === 'profilePhoto' ? profilePhotoName :
+                            inputElement.id === 'aadhaarFront' ? aadhaarFrontName :
+                            aadhaarBackName;
+      fileNameElement.textContent = `📷 Camera Photo`;
+      
+      // Trigger change event
+      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // Close camera
+      closeCameraModal();
+      
+      // Show success message
+      showMessage('Photo captured successfully!', 'success');
+      
+    }, 'image/jpeg', 0.9); // 90% quality
+    
+  } catch (error) {
+    console.error('Error capturing photo:', error);
+    showMessage('Error capturing photo. Please try again.', 'error');
+  }
+}
+
+// ================== IMAGE HANDLING FUNCTIONS ==================
+
+// Convert file to Base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Process and save images
+async function saveImagesToStorage(profileFile, frontFile, backFile) {
+  try {
+    // Convert all files to Base64 in parallel
+    const [profileBase64, frontBase64, backBase64] = await Promise.all([
+      fileToBase64(profileFile),
+      fileToBase64(frontFile),
+      fileToBase64(backFile)
+    ]);
+    
+    // Save to image storage and get image IDs
+    const profileId = IMAGE_STORAGE.saveImage(profileBase64, 'profile');
+    const frontId = IMAGE_STORAGE.saveImage(frontBase64, 'aadhaar_front');
+    const backId = IMAGE_STORAGE.saveImage(backBase64, 'aadhaar_back');
+    
+    return {
+      success: true,
+      profileId,
+      frontId,
+      backId,
+      profileUrl: profileBase64,  // For immediate display
+      frontUrl: frontBase64,
+      backUrl: backBase64
+    };
+  } catch (error) {
+    console.error('Error saving images:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Get image URL from storage ID
+function getImageUrl(imageId) {
+  const imageData = IMAGE_STORAGE.getImage(imageId);
+  return imageData ? imageData.data : null;
+}
+
+// ================== JSONBin.io API FUNCTIONS ==================
+
+async function loadMembers() {
+  try {
+    showLoading(true);
+    showMessage('Loading members from cloud...', 'info');
+    
+    const response = await fetch(
+      `${JSONBIN_CONFIG.API_URL}/${JSONBIN_CONFIG.BIN_ID}/latest`,
+      {
+        headers: {
+          'X-Master-Key': JSONBIN_CONFIG.MASTER_KEY
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    members = data.record?.members || [];
+    
+    // Load images for each member
+    members.forEach(member => {
+      if (member.profileImageId) {
+        member.profilePhoto = getImageUrl(member.profileImageId) || '/placeholder-profile.jpg';
+      }
+      if (member.aadhaarFrontId) {
+        member.aadhaarFront = getImageUrl(member.aadhaarFrontId) || '/placeholder-front.jpg';
+      }
+      if (member.aadhaarBackId) {
+        member.aadhaarBack = getImageUrl(member.aadhaarBackId) || '/placeholder-back.jpg';
+      }
+    });
+
+    // Fallback to localStorage if JSONBin is empty
+    if (members.length === 0) {
+      const localData = JSON.parse(localStorage.getItem('membersMetadata') || '[]');
+      if (localData.length > 0) {
+        members = localData;
+        // Sync localStorage to JSONBin
+        await saveAllMembersToJSONBin();
+        showMessage('Local data synced to cloud!', 'success');
+      }
+    } else {
+      // Sync JSONBin data to localStorage for offline access
+      localStorage.setItem('membersMetadata', JSON.stringify(members.map(m => ({
+        id: m.id,
+        name: m.name,
+        mobile: m.mobile,
+        email: m.email,
+        profileImageId: m.profileImageId,
+        aadhaarFrontId: m.aadhaarFrontId,
+        aadhaarBackId: m.aadhaarBackId,
+        createdAt: m.createdAt
+      }))));
+    }
+
+    renderMembers();
+    updateMemberCount();
+    showMessage(`✅ Loaded ${members.length} members from cloud`, 'success');
+    
+  } catch (error) {
+    console.error('Load error:', error);
+    // Fallback to localStorage
+    const localData = JSON.parse(localStorage.getItem('membersMetadata') || '[]');
+    members = localData.map(member => ({
+      ...member,
+      profilePhoto: getImageUrl(member.profileImageId) || '/placeholder-profile.jpg',
+      aadhaarFront: getImageUrl(member.aadhaarFrontId) || '/placeholder-front.jpg',
+      aadhaarBack: getImageUrl(member.aadhaarBackId) || '/placeholder-back.jpg'
+    }));
+    
+    renderMembers();
+    updateMemberCount();
+    showMessage('⚠️ Using offline data. Cloud sync failed.', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function saveMemberToJSONBin(name, mobile, email, imageResult) {
+  try {
+    const memberId = Date.now().toString();
+    
+    // Create member object with IMAGE IDs (not full Base64)
+    const member = {
+      id: memberId,
+      name: name,
+      mobile: mobile,
+      email: email,
+      profileImageId: imageResult.profileId,
+      aadhaarFrontId: imageResult.frontId,
+      aadhaarBackId: imageResult.backId,
+      createdAt: new Date().toISOString()
+    };
+
+    // Add to local array
+    const memberWithImages = {
+      ...member,
+      profilePhoto: imageResult.profileUrl,  // For immediate display
+      aadhaarFront: imageResult.frontUrl,
+      aadhaarBack: imageResult.backUrl
+    };
+    
+    members.unshift(memberWithImages);
+    
+    // Save metadata to JSONBin.io (NO images, just IDs)
+    const response = await fetch(
+      `${JSONBIN_CONFIG.API_URL}/${JSONBIN_CONFIG.BIN_ID}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_CONFIG.MASTER_KEY
+        },
+        body: JSON.stringify({ 
+          members: members.map(m => ({
+            id: m.id,
+            name: m.name,
+            mobile: m.mobile,
+            email: m.email,
+            profileImageId: m.profileImageId,
+            aadhaarFrontId: m.aadhaarFrontId,
+            aadhaarBackId: m.aadhaarBackId,
+            createdAt: m.createdAt
+          }))
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Save failed: ${response.status}`);
+    }
+
+    // Save metadata to localStorage for offline access
+    localStorage.setItem('membersMetadata', JSON.stringify(
+      members.map(m => ({
+        id: m.id,
+        name: m.name,
+        mobile: m.mobile,
+        email: m.email,
+        profileImageId: m.profileImageId,
+        aadhaarFrontId: m.aadhaarFrontId,
+        aadhaarBackId: m.aadhaarBackId,
+        createdAt: m.createdAt
+      }))
+    ));
+    
+    return { success: true, member: memberWithImages };
+    
+  } catch (error) {
+    console.error('Save error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function saveAllMembersToJSONBin() {
+  try {
+    const response = await fetch(
+      `${JSONBIN_CONFIG.API_URL}/${JSONBIN_CONFIG.BIN_ID}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_CONFIG.MASTER_KEY
+        },
+        body: JSON.stringify({ 
+          members: members.map(m => ({
+            id: m.id,
+            name: m.name,
+            mobile: m.mobile,
+            email: m.email,
+            profileImageId: m.profileImageId,
+            aadhaarFrontId: m.aadhaarFrontId,
+            aadhaarBackId: m.aadhaarBackId,
+            createdAt: m.createdAt
+          }))
+        })
+      }
+    );
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Sync error:', error);
+    return false;
+  }
+}
+
+// ================== FORM HANDLING ==================
+
+function openForm() {
+  formSection.classList.remove("hidden");
+  form.reset();
+  clearFileNames();
+  formMessages.innerHTML = '';
+  formSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeForm() {
+  formSection.classList.add("hidden");
+  form.reset();
+  clearFileNames();
+  formMessages.innerHTML = '';
+}
+
+function clearFileNames() {
+  profilePhotoName.textContent = '';
+  aadhaarFrontName.textContent = '';
+  aadhaarBackName.textContent = '';
+}
+
+function showMessage(message, type = 'error') {
+  formMessages.innerHTML = `
+    <div class="${type === 'error' ? 'error-msg' : 'success-msg'}">
+      <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+      ${message}
+    </div>
+  `;
+}
+
+function showLoading(isLoading) {
+  const submitBtn = form.querySelector('.submit-btn');
+  if (isLoading && submitBtn) {
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    submitBtn.disabled = true;
+  } else if (submitBtn) {
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> Save Member';
+    submitBtn.disabled = false;
+  }
+}
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  formMessages.innerHTML = '';
+
+  // Get form values
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const profilePhoto = profilePhotoInput.files[0];
+  const aadhaarFront = aadhaarFrontInput.files[0];
+  const aadhaarBack = aadhaarBackInput.files[0];
+
+  // Validation
+  if (!name) {
+    showMessage('Please enter full name');
+    return;
+  }
+
+  if (!/^\d{10}$/.test(mobile)) {
+    showMessage('Please enter valid 10-digit mobile number');
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showMessage('Please enter valid email address');
+    return;
+  }
+
+  if (!profilePhoto || !aadhaarFront || !aadhaarBack) {
+    showMessage('Please upload or capture all required images');
+    return;
+  }
+
+  // File size check (2MB max)
+  const maxSize = 2 * 1024 * 1024;
+  if (profilePhoto.size > maxSize || aadhaarFront.size > maxSize || aadhaarBack.size > maxSize) {
+    showMessage('Each image must be less than 2MB');
+    return;
+  }
+
+  try {
+    // Show loading
+    const submitBtn = form.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+
+    // Step 1: Save images to storage
+    showMessage('Saving images...', 'info');
+    const imageResult = await saveImagesToStorage(profilePhoto, aadhaarFront, aadhaarBack);
+    
+    if (!imageResult.success) {
+      throw new Error('Failed to save images');
+    }
+
+    // Step 2: Save member metadata to JSONBin.io (with image IDs)
+    showMessage('Saving member data to cloud...', 'info');
+    const saveResult = await saveMemberToJSONBin(name, mobile, email, imageResult);
+    
+    if (saveResult.success) {
+      // Update UI
+      renderMembers();
+      updateMemberCount();
+      
+      // Show success
+      showMessage('✅ Member saved successfully! Images stored separately.', 'success');
+      
+      // Close form after delay
+      setTimeout(() => {
+        closeForm();
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }, 2000);
+    } else {
+      throw new Error(saveResult.error);
+    }
+
+  } catch (error) {
+    console.error('Form error:', error);
+    showMessage(`Error: ${error.message}. Data saved locally only.`, 'error');
+    
+    // Reset button
+    const submitBtn = form.querySelector('.submit-btn');
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> Save Member';
+    submitBtn.disabled = false;
+  }
+}
+
+// ================== UI FUNCTIONS ==================
+
+function renderMembers() {
+  grid.innerHTML = '';
+  
+  if (members.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>No members added yet</p>
+        <small>Click "Add New Member" to get started</small>
+      </div>
+    `;
+    return;
+  }
+
+  members.forEach(member => {
+    const card = document.createElement("div");
+    card.className = "member-card";
+    card.innerHTML = `
+      <img src="${member.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+'}" 
+           alt="${member.name}" 
+           onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+'">
+      <h4>${member.name}</h4>
+    `;
+    card.addEventListener("click", () => openProfileModal(member));
+    grid.appendChild(card);
+  });
+}
+
+function updateMemberCount() {
+  const count = members.length;
+  memberCount.textContent = `${count} member${count !== 1 ? 's' : ''}`;
+}
+
+function openProfileModal(member) {
+  document.getElementById("modalProfileImg").src = member.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTYwIDY2QzY2LjYyNzQgNjYgNzIgNjAuNjI3NCA3MiA1NEM3MiA0Ny4zNzI2IDY2LjYyNzQgNDIgNjAgNDJDNTMuMzcyNiA0MiA0OCA0Ny4zNzI2IDQ4IDU0QzQ4IDYwLjYyNzQgNTMuMzcyNiA2NiA2MCA2NloiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTc4IDc4SDE5MkwxMTYgNTRMNzggNzhaIiBmaWxsPSIjRTVFNUU1Ii8+Cjwvc3ZnPg==';
+  document.getElementById("modalProfileImg").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTYwIDY2QzY2LjYyNzQgNjYgNzIgNjAuNjI3NCA3MiA1NEM3MiA0Ny4zNzI2IDY2LjYyNzQgNDIgNjAgNDJDNTMuMzcyNiA0MiA0OCA0Ny4zNzI2IDQ4IDU0QzQ4IDYwLjYyNzQgNTMuMzcyNiA2NiA2MCA2NloiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTc4IDc4SDE5MkwxMTYgNTRMNzggNzhaIiBmaWxsPSIjRTVFNUU1Ii8+Cjwvc3ZnPg=='";
+  document.getElementById("modalProfileImg").alt = member.name;
+  document.getElementById("modalName").textContent = member.name;
+  document.getElementById("modalMobile").textContent = member.mobile;
+  document.getElementById("modalEmail").textContent = member.email;
+  document.getElementById("modalAadhaarFront").src = member.aadhaarFront || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxNDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+Cjwvc3ZnPg==';
+  document.getElementById("modalAadhaarFront").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4KPHJlY3QgeD0iNTAiIHk9IjE0MCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'";
+  document.getElementById("modalAadhaarBack").src = member.aadhaarBack || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+';
+  document.getElementById("modalAadhaarBack").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'";
+  
+  modal.classList.remove("hidden");
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfileModal() {
+  modal.classList.add("hidden");
+  document.body.style.overflow = '';
+}
+
+// Add error handling for images
+window.addEventListener('error', function(e) {
+  if (e.target.tagName === 'IMG') {
+    console.log('Image failed to load:', e.target.src);
+    // We're already handling errors with inline onerror attributes
+  }
+}, true);
+</script>
+
+</body>
+</html>
