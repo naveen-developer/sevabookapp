@@ -844,6 +844,7 @@ let members = [];
 // Camera variables
 let cameraStream = null;
 let currentCameraInput = null;
+let capturedPhotoData = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -1022,7 +1023,7 @@ async function uploadImagesToCloudinary(profileFile, frontFile, backFile) {
   }
 }
 
-// ================== CAMERA CAPTURE FUNCTIONS ==================
+// ================== IMPROVED CAMERA CAPTURE FUNCTIONS ==================
 
 async function openCamera(inputElement) {
   try {
@@ -1033,6 +1034,7 @@ async function openCamera(inputElement) {
     
     // Store which input we're capturing for
     currentCameraInput = inputElement;
+    capturedPhotoData = null;
     
     // Create camera modal
     const cameraModal = document.createElement('div');
@@ -1048,15 +1050,39 @@ async function openCamera(inputElement) {
         </h3>
         
         <div class="camera-container">
-          <video id="cameraPreview" autoplay playsinline 
-                 style="width: 100%; border-radius: 10px; background: #000;"></video>
+          <!-- Live camera view -->
+          <div id="cameraView" class="camera-view">
+            <video id="cameraPreview" autoplay playsinline 
+                   style="width: 100%; border-radius: 10px; background: #000;"></video>
+          </div>
           
-          <div class="camera-controls" style="display: flex; gap: 15px; margin-top: 20px; justify-content: center;">
+          <!-- Captured photo preview (hidden initially) -->
+          <div id="photoPreview" class="photo-preview hidden" 
+               style="width: 100%; max-height: 400px; overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
+            <img id="capturedPhoto" src="" style="width: 100%; height: auto; display: block;">
+            <div style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">
+              <i class="fas fa-check-circle" style="color: #28a745; margin-right: 5px;"></i>
+              Photo captured successfully
+            </div>
+          </div>
+          
+          <!-- Camera controls -->
+          <div id="cameraControls" class="camera-controls" style="display: flex; gap: 15px; margin-top: 20px; justify-content: center;">
             <button id="captureBtn" class="submit-btn" style="flex: none; padding: 15px 30px;">
               <i class="fas fa-camera"></i> Capture
             </button>
             <button id="switchCameraBtn" class="cancel-btn" style="flex: none; padding: 15px 20px;">
               <i class="fas fa-sync-alt"></i> Switch
+            </button>
+          </div>
+          
+          <!-- Retake/Confirm buttons (hidden initially) -->
+          <div id="confirmControls" class="camera-controls hidden" style="display: flex; gap: 15px; margin-top: 20px; justify-content: center;">
+            <button id="retakeBtn" class="cancel-btn" style="flex: none; padding: 15px 30px;">
+              <i class="fas fa-redo"></i> Retake
+            </button>
+            <button id="confirmBtn" class="submit-btn" style="flex: none; padding: 15px 30px;">
+              <i class="fas fa-check"></i> Use Photo
             </button>
           </div>
           
@@ -1069,11 +1095,18 @@ async function openCamera(inputElement) {
     
     document.body.appendChild(cameraModal);
     
-    // Get video element and buttons
+    // Get DOM elements
     const video = document.getElementById('cameraPreview');
     const closeBtn = document.getElementById('closeCameraModal');
     const captureBtn = document.getElementById('captureBtn');
     const switchBtn = document.getElementById('switchCameraBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cameraView = document.getElementById('cameraView');
+    const photoPreview = document.getElementById('photoPreview');
+    const cameraControls = document.getElementById('cameraControls');
+    const confirmControls = document.getElementById('confirmControls');
+    const capturedPhoto = document.getElementById('capturedPhoto');
     
     // Set up camera
     const constraints = {
@@ -1087,17 +1120,34 @@ async function openCamera(inputElement) {
     cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = cameraStream;
     
-    // Event listeners for camera modal
+    // Event listeners
     closeBtn.addEventListener('click', () => {
       closeCameraModal();
     });
     
     captureBtn.addEventListener('click', () => {
-      capturePhoto(video, inputElement);
+      capturePhotoPreview(video, capturedPhoto, cameraView, photoPreview, cameraControls, confirmControls);
     });
     
     switchBtn.addEventListener('click', () => {
       switchCamera(video);
+    });
+    
+    retakeBtn.addEventListener('click', () => {
+      // Show camera view again
+      cameraView.classList.remove('hidden');
+      photoPreview.classList.add('hidden');
+      cameraControls.classList.remove('hidden');
+      confirmControls.classList.add('hidden');
+      capturedPhotoData = null;
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      if (capturedPhotoData) {
+        applyCapturedPhoto(capturedPhotoData, inputElement);
+        closeCameraModal();
+        showMessage('✅ Photo captured and applied successfully!', 'success');
+      }
     });
     
     // Close on background click
@@ -1155,7 +1205,7 @@ async function switchCamera(video) {
   }
 }
 
-function capturePhoto(video, inputElement) {
+function capturePhotoPreview(video, capturedPhotoElement, cameraView, photoPreview, cameraControls, confirmControls) {
   try {
     // Create canvas to capture photo
     const canvas = document.createElement('canvas');
@@ -1167,41 +1217,61 @@ function capturePhoto(video, inputElement) {
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Convert to blob
-    canvas.toBlob(function(blob) {
-      // Create file from blob
-      const file = new File([blob], `camera_${Date.now()}.jpg`, {
-        type: 'image/jpeg',
-        lastModified: Date.now()
-      });
-      
-      // Create a DataTransfer object to set the file
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      
-      // Set the file to the input
-      inputElement.files = dataTransfer.files;
-      
-      // Update the display name
-      const fileNameElement = inputElement.id === 'profilePhoto' ? profilePhotoName :
-                            inputElement.id === 'aadhaarFront' ? aadhaarFrontName :
-                            aadhaarBackName;
-      fileNameElement.textContent = `📷 Camera Photo`;
-      
-      // Trigger change event
-      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      // Close camera
-      closeCameraModal();
-      
-      // Show success message
-      showMessage('Photo captured successfully!', 'success');
-      
-    }, 'image/jpeg', 0.9); // 90% quality
+    // Get image data URL
+    capturedPhotoData = canvas.toDataURL('image/jpeg', 0.9);
+    
+    // Show captured photo preview
+    capturedPhotoElement.src = capturedPhotoData;
+    
+    // Switch views
+    cameraView.classList.add('hidden');
+    photoPreview.classList.remove('hidden');
+    cameraControls.classList.add('hidden');
+    confirmControls.classList.remove('hidden');
+    
+    // Stop camera stream to save battery
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
     
   } catch (error) {
-    console.error('Error capturing photo:', error);
-    showMessage('Error capturing photo. Please try again.', 'error');
+    console.error('Error capturing photo preview:', error);
+    alert('Error capturing photo. Please try again.');
+  }
+}
+
+function applyCapturedPhoto(photoData, inputElement) {
+  try {
+    // Convert data URL to blob
+    fetch(photoData)
+      .then(res => res.blob())
+      .then(blob => {
+        // Create file from blob
+        const file = new File([blob], `camera_${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        
+        // Create a DataTransfer object to set the file
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        // Set the file to the input
+        inputElement.files = dataTransfer.files;
+        
+        // Update the display name
+        const fileNameElement = inputElement.id === 'profilePhoto' ? profilePhotoName :
+                              inputElement.id === 'aadhaarFront' ? aadhaarFrontName :
+                              aadhaarBackName;
+        fileNameElement.textContent = `📷 Camera Photo (${new Date().toLocaleTimeString()})`;
+        
+        // Trigger change event
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      
+  } catch (error) {
+    console.error('Error applying captured photo:', error);
+    showMessage('Error applying photo. Please try again.', 'error');
   }
 }
 
@@ -1517,7 +1587,7 @@ function updateMemberCount() {
 function getPlaceholderImage(type) {
   const placeholders = {
     profile: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+',
-    front: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxNDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4KPC9zdmc+',
+    front: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4+CjxyZWN0IHg9IjUwIiB5PSIxNDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4KPC9zdmc+',
     back: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'
   };
   return placeholders[type] || placeholders.profile;
