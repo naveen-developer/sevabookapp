@@ -8,7 +8,7 @@
 <style>
 /* ================== IMPROVED CSS ================== */
 :root {
-  --primary-color: #006291;
+  --primary-color: #ec530d;
   --secondary-color: #004a6e;
   --text-color: #333;
   --light-gray: #f4f6f8;
@@ -49,7 +49,7 @@ body {
 
 .header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 2rem;
   color: var(--primary-color);
 }
 
@@ -348,6 +348,34 @@ body {
   display: none !important;
 }
 
+/* Progress Bar */
+.progress-container {
+  margin-top: 10px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
 /* Modal */
 .modal {
   position: fixed;
@@ -537,7 +565,7 @@ body {
   }
   
   .member-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .header {
@@ -556,9 +584,35 @@ body {
   }
   
   .member-card img {
-    width: 70px;
-    height: 70px;
+    width: 100px;
+        height: 100px;
   }
+}
+
+.main-title{
+text-shadow: 0 1px 0 #ccc, 
+               0 2px 0 #c9c9c9,
+               0 3px 0 #bbb,
+               0 4px 0 #b9b9b9,
+               0 5px 0 #aaa,
+               0 6px 1px rgba(0,0,0,.1),
+               0 0 5px rgba(0,0,0,.1),
+               0 1px 3px rgba(0,0,0,.3),
+               0 3px 5px rgba(0,0,0,.2),
+               0 5px 10px rgba(0,0,0,.25),
+               0 10px 10px rgba(0,0,0,.2),
+               0 20px 20px rgba(0,0,0,.15);
+text-align: center;
+    font-size: 28px;
+}
+.title-picture {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+.title-picture img{
+  width: 50px;
 }
 </style>
 </head>
@@ -569,7 +623,11 @@ body {
 
   <!-- Header -->
   <header class="header">
-    <h2>Members Management</h2>
+  <div class="title-picture">
+    <img src="title1.jpg" alt="">
+      <h2 class="main-title">Tirupati Seva</h2>
+<img src="title2.jpg" alt="">
+  </div>
     <button id="openFormBtn" class="add-btn">
       <i class="fas fa-user-plus"></i>
       <span>Add New Member</span>
@@ -621,6 +679,12 @@ body {
           </div>
         </div>
         <div id="profilePhotoName" class="file-name"></div>
+        <div id="profilePhotoProgress" class="progress-container hidden">
+          <div class="progress-bar">
+            <div class="progress-fill" id="profilePhotoProgressFill"></div>
+          </div>
+          <div class="progress-text" id="profilePhotoProgressText">0%</div>
+        </div>
       </div>
 
       <!-- Aadhaar Front with Camera Option -->
@@ -642,6 +706,12 @@ body {
           </div>
         </div>
         <div id="aadhaarFrontName" class="file-name"></div>
+        <div id="aadhaarFrontProgress" class="progress-container hidden">
+          <div class="progress-bar">
+            <div class="progress-fill" id="aadhaarFrontProgressFill"></div>
+          </div>
+          <div class="progress-text" id="aadhaarFrontProgressText">0%</div>
+        </div>
       </div>
 
       <!-- Aadhaar Back with Camera Option -->
@@ -663,6 +733,12 @@ body {
           </div>
         </div>
         <div id="aadhaarBackName" class="file-name"></div>
+        <div id="aadhaarBackProgress" class="progress-container hidden">
+          <div class="progress-bar">
+            <div class="progress-fill" id="aadhaarBackProgressFill"></div>
+          </div>
+          <div class="progress-text" id="aadhaarBackProgressText">0%</div>
+        </div>
       </div>
 
       <div id="formMessages"></div>
@@ -718,9 +794,14 @@ body {
 </div>
 
 <script>
-/* ================== JSONBin.io WITH IMAGE PATH STORAGE ================== */
+/* ================== CLOUDINARY CONFIGURATION ================== */
+const CLOUDINARY_CONFIG = {
+  CLOUD_NAME: "dusqegvab",
+  UPLOAD_PRESET: "testPreset",
+  FOLDER: "members_management"
+};
 
-// ⚙️ CONFIGURATION - REPLACE THESE WITH YOUR VALUES
+/* ================== JSONBin.io CONFIGURATION ================== */
 const JSONBIN_CONFIG = {
   BIN_ID: '69480018ae596e708fa89185',
   MASTER_KEY: '$2a$10$n.pglrUySD3I.DnHpXC3eeCFtcHmmW36bLXKvZxG5qJu65qhKW7yi',
@@ -746,69 +827,28 @@ const profilePhotoName = document.getElementById("profilePhotoName");
 const aadhaarFrontName = document.getElementById("aadhaarFrontName");
 const aadhaarBackName = document.getElementById("aadhaarBackName");
 
-// Global members array (stores metadata only)
+// Progress elements
+const profilePhotoProgress = document.getElementById("profilePhotoProgress");
+const profilePhotoProgressFill = document.getElementById("profilePhotoProgressFill");
+const profilePhotoProgressText = document.getElementById("profilePhotoProgressText");
+const aadhaarFrontProgress = document.getElementById("aadhaarFrontProgress");
+const aadhaarFrontProgressFill = document.getElementById("aadhaarFrontProgressFill");
+const aadhaarFrontProgressText = document.getElementById("aadhaarFrontProgressText");
+const aadhaarBackProgress = document.getElementById("aadhaarBackProgress");
+const aadhaarBackProgressFill = document.getElementById("aadhaarBackProgressFill");
+const aadhaarBackProgressText = document.getElementById("aadhaarBackProgressText");
+
+// Global members array (stores metadata with Cloudinary URLs)
 let members = [];
 
 // Camera variables
 let cameraStream = null;
 let currentCameraInput = null;
 
-// Image storage (in localStorage for demo - replace with real server in production)
-const IMAGE_STORAGE = {
-  // Get image from storage
-  getImage: function(imageId) {
-    try {
-      const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
-      return images[imageId] || null;
-    } catch (error) {
-      console.error('Error getting image:', error);
-      return null;
-    }
-  },
-  
-  // Save image to storage (returns image ID)
-  saveImage: function(base64Data, imageType) {
-    try {
-      const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
-      
-      images[imageId] = {
-        data: base64Data,
-        type: imageType,
-        timestamp: new Date().toISOString()
-      };
-      
-      localStorage.setItem('memberImages', JSON.stringify(images));
-      return imageId;
-    } catch (error) {
-      console.error('Error saving image:', error);
-      return null;
-    }
-  },
-  
-  // Clean up old images (optional)
-  cleanup: function(daysOld = 30) {
-    const cutoff = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
-    const images = JSON.parse(localStorage.getItem('memberImages') || '{}');
-    const updatedImages = {};
-    
-    for (const [id, imageData] of Object.entries(images)) {
-      const timestamp = new Date(imageData.timestamp).getTime();
-      if (timestamp > cutoff) {
-        updatedImages[id] = imageData;
-      }
-    }
-    
-    localStorage.setItem('memberImages', JSON.stringify(updatedImages));
-  }
-};
-
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
   setupEventListeners();
   loadMembers(); // Load from JSONBin on startup
-  // Optional: Clean up old images every 30 days
-  IMAGE_STORAGE.cleanup(30);
 });
 
 function setupEventListeners() {
@@ -849,6 +889,137 @@ function setupEventListeners() {
       closeProfileModal();
     }
   });
+}
+
+// ================== CLOUDINARY UPLOAD FUNCTIONS ==================
+
+async function uploadToCloudinary(file, imageType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_CONFIG.UPLOAD_PRESET);
+    formData.append("folder", `${CLOUDINARY_CONFIG.FOLDER}/${imageType}`);
+    
+    // Add timestamp for unique filename
+    const timestamp = Date.now();
+    formData.append("public_id", `${imageType}_${timestamp}`);
+    
+    const xhr = new XMLHttpRequest();
+    
+    // Track upload progress
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          onProgress(percentComplete);
+        }
+      });
+    }
+    
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.CLOUD_NAME}/image/upload`);
+    
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        resolve({
+          success: true,
+          url: response.secure_url,
+          publicId: response.public_id
+        });
+      } else {
+        reject(new Error('Upload failed'));
+      }
+    };
+    
+    xhr.onerror = function() {
+      reject(new Error('Network error'));
+    };
+    
+    xhr.send(formData);
+  });
+}
+
+// Upload multiple images to Cloudinary
+async function uploadImagesToCloudinary(profileFile, frontFile, backFile) {
+  try {
+    showMessage('Uploading images to cloud...', 'info');
+    
+    // Create loading progress states
+    const uploadResults = {
+      profile: { success: false, url: null, publicId: null },
+      front: { success: false, url: null, publicId: null },
+      back: { success: false, url: null, publicId: null }
+    };
+    
+    // Show progress containers
+    profilePhotoProgress.classList.remove('hidden');
+    aadhaarFrontProgress.classList.remove('hidden');
+    aadhaarBackProgress.classList.remove('hidden');
+    
+    // Upload all images in parallel with progress tracking
+    const uploadPromises = [];
+    
+    uploadPromises.push(
+      uploadToCloudinary(profileFile, 'profile', (progress) => {
+        profilePhotoProgressFill.style.width = `${progress}%`;
+        profilePhotoProgressText.textContent = `${progress}%`;
+      }).then(result => {
+        uploadResults.profile = result;
+      })
+    );
+    
+    uploadPromises.push(
+      uploadToCloudinary(frontFile, 'aadhaar_front', (progress) => {
+        aadhaarFrontProgressFill.style.width = `${progress}%`;
+        aadhaarFrontProgressText.textContent = `${progress}%`;
+      }).then(result => {
+        uploadResults.front = result;
+      })
+    );
+    
+    uploadPromises.push(
+      uploadToCloudinary(backFile, 'aadhaar_back', (progress) => {
+        aadhaarBackProgressFill.style.width = `${progress}%`;
+        aadhaarBackProgressText.textContent = `${progress}%`;
+      }).then(result => {
+        uploadResults.back = result;
+      })
+    );
+    
+    await Promise.all(uploadPromises);
+    
+    // Hide progress containers
+    profilePhotoProgress.classList.add('hidden');
+    aadhaarFrontProgress.classList.add('hidden');
+    aadhaarBackProgress.classList.add('hidden');
+    
+    if (uploadResults.profile.success && uploadResults.front.success && uploadResults.back.success) {
+      return {
+        success: true,
+        profileUrl: uploadResults.profile.url,
+        frontUrl: uploadResults.front.url,
+        backUrl: uploadResults.back.url,
+        profilePublicId: uploadResults.profile.publicId,
+        frontPublicId: uploadResults.front.publicId,
+        backPublicId: uploadResults.back.publicId
+      };
+    } else {
+      throw new Error('Some images failed to upload');
+    }
+    
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    
+    // Hide progress containers
+    profilePhotoProgress.classList.add('hidden');
+    aadhaarFrontProgress.classList.add('hidden');
+    aadhaarBackProgress.classList.add('hidden');
+    
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 }
 
 // ================== CAMERA CAPTURE FUNCTIONS ==================
@@ -1034,54 +1205,6 @@ function capturePhoto(video, inputElement) {
   }
 }
 
-// ================== IMAGE HANDLING FUNCTIONS ==================
-
-// Convert file to Base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-// Process and save images
-async function saveImagesToStorage(profileFile, frontFile, backFile) {
-  try {
-    // Convert all files to Base64 in parallel
-    const [profileBase64, frontBase64, backBase64] = await Promise.all([
-      fileToBase64(profileFile),
-      fileToBase64(frontFile),
-      fileToBase64(backFile)
-    ]);
-    
-    // Save to image storage and get image IDs
-    const profileId = IMAGE_STORAGE.saveImage(profileBase64, 'profile');
-    const frontId = IMAGE_STORAGE.saveImage(frontBase64, 'aadhaar_front');
-    const backId = IMAGE_STORAGE.saveImage(backBase64, 'aadhaar_back');
-    
-    return {
-      success: true,
-      profileId,
-      frontId,
-      backId,
-      profileUrl: profileBase64,  // For immediate display
-      frontUrl: frontBase64,
-      backUrl: backBase64
-    };
-  } catch (error) {
-    console.error('Error saving images:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-// Get image URL from storage ID
-function getImageUrl(imageId) {
-  const imageData = IMAGE_STORAGE.getImage(imageId);
-  return imageData ? imageData.data : null;
-}
-
 // ================== JSONBin.io API FUNCTIONS ==================
 
 async function loadMembers() {
@@ -1105,19 +1228,6 @@ async function loadMembers() {
     const data = await response.json();
     members = data.record?.members || [];
     
-    // Load images for each member
-    members.forEach(member => {
-      if (member.profileImageId) {
-        member.profilePhoto = getImageUrl(member.profileImageId) || '/placeholder-profile.jpg';
-      }
-      if (member.aadhaarFrontId) {
-        member.aadhaarFront = getImageUrl(member.aadhaarFrontId) || '/placeholder-front.jpg';
-      }
-      if (member.aadhaarBackId) {
-        member.aadhaarBack = getImageUrl(member.aadhaarBackId) || '/placeholder-back.jpg';
-      }
-    });
-
     // Fallback to localStorage if JSONBin is empty
     if (members.length === 0) {
       const localData = JSON.parse(localStorage.getItem('membersMetadata') || '[]');
@@ -1129,16 +1239,7 @@ async function loadMembers() {
       }
     } else {
       // Sync JSONBin data to localStorage for offline access
-      localStorage.setItem('membersMetadata', JSON.stringify(members.map(m => ({
-        id: m.id,
-        name: m.name,
-        mobile: m.mobile,
-        email: m.email,
-        profileImageId: m.profileImageId,
-        aadhaarFrontId: m.aadhaarFrontId,
-        aadhaarBackId: m.aadhaarBackId,
-        createdAt: m.createdAt
-      }))));
+      localStorage.setItem('membersMetadata', JSON.stringify(members));
     }
 
     renderMembers();
@@ -1149,12 +1250,7 @@ async function loadMembers() {
     console.error('Load error:', error);
     // Fallback to localStorage
     const localData = JSON.parse(localStorage.getItem('membersMetadata') || '[]');
-    members = localData.map(member => ({
-      ...member,
-      profilePhoto: getImageUrl(member.profileImageId) || '/placeholder-profile.jpg',
-      aadhaarFront: getImageUrl(member.aadhaarFrontId) || '/placeholder-front.jpg',
-      aadhaarBack: getImageUrl(member.aadhaarBackId) || '/placeholder-back.jpg'
-    }));
+    members = localData;
     
     renderMembers();
     updateMemberCount();
@@ -1164,33 +1260,29 @@ async function loadMembers() {
   }
 }
 
-async function saveMemberToJSONBin(name, mobile, email, imageResult) {
+async function saveMemberToJSONBin(name, mobile, email, cloudinaryResult) {
   try {
     const memberId = Date.now().toString();
     
-    // Create member object with IMAGE IDs (not full Base64)
+    // Create member object with Cloudinary URLs
     const member = {
       id: memberId,
       name: name,
       mobile: mobile,
       email: email,
-      profileImageId: imageResult.profileId,
-      aadhaarFrontId: imageResult.frontId,
-      aadhaarBackId: imageResult.backId,
+      profilePhoto: cloudinaryResult.profileUrl,
+      aadhaarFront: cloudinaryResult.frontUrl,
+      aadhaarBack: cloudinaryResult.backUrl,
+      profilePublicId: cloudinaryResult.profilePublicId,
+      frontPublicId: cloudinaryResult.frontPublicId,
+      backPublicId: cloudinaryResult.backPublicId,
       createdAt: new Date().toISOString()
     };
 
     // Add to local array
-    const memberWithImages = {
-      ...member,
-      profilePhoto: imageResult.profileUrl,  // For immediate display
-      aadhaarFront: imageResult.frontUrl,
-      aadhaarBack: imageResult.backUrl
-    };
+    members.unshift(member);
     
-    members.unshift(memberWithImages);
-    
-    // Save metadata to JSONBin.io (NO images, just IDs)
+    // Save to JSONBin.io (only metadata, images are on Cloudinary)
     const response = await fetch(
       `${JSONBIN_CONFIG.API_URL}/${JSONBIN_CONFIG.BIN_ID}`,
       {
@@ -1199,18 +1291,7 @@ async function saveMemberToJSONBin(name, mobile, email, imageResult) {
           'Content-Type': 'application/json',
           'X-Master-Key': JSONBIN_CONFIG.MASTER_KEY
         },
-        body: JSON.stringify({ 
-          members: members.map(m => ({
-            id: m.id,
-            name: m.name,
-            mobile: m.mobile,
-            email: m.email,
-            profileImageId: m.profileImageId,
-            aadhaarFrontId: m.aadhaarFrontId,
-            aadhaarBackId: m.aadhaarBackId,
-            createdAt: m.createdAt
-          }))
-        })
+        body: JSON.stringify({ members })
       }
     );
 
@@ -1219,20 +1300,9 @@ async function saveMemberToJSONBin(name, mobile, email, imageResult) {
     }
 
     // Save metadata to localStorage for offline access
-    localStorage.setItem('membersMetadata', JSON.stringify(
-      members.map(m => ({
-        id: m.id,
-        name: m.name,
-        mobile: m.mobile,
-        email: m.email,
-        profileImageId: m.profileImageId,
-        aadhaarFrontId: m.aadhaarFrontId,
-        aadhaarBackId: m.aadhaarBackId,
-        createdAt: m.createdAt
-      }))
-    ));
+    localStorage.setItem('membersMetadata', JSON.stringify(members));
     
-    return { success: true, member: memberWithImages };
+    return { success: true, member: member };
     
   } catch (error) {
     console.error('Save error:', error);
@@ -1250,18 +1320,7 @@ async function saveAllMembersToJSONBin() {
           'Content-Type': 'application/json',
           'X-Master-Key': JSONBIN_CONFIG.MASTER_KEY
         },
-        body: JSON.stringify({ 
-          members: members.map(m => ({
-            id: m.id,
-            name: m.name,
-            mobile: m.mobile,
-            email: m.email,
-            profileImageId: m.profileImageId,
-            aadhaarFrontId: m.aadhaarFrontId,
-            aadhaarBackId: m.aadhaarBackId,
-            createdAt: m.createdAt
-          }))
-        })
+        body: JSON.stringify({ members })
       }
     );
     
@@ -1278,6 +1337,7 @@ function openForm() {
   formSection.classList.remove("hidden");
   form.reset();
   clearFileNames();
+  resetProgressBars();
   formMessages.innerHTML = '';
   formSection.scrollIntoView({ behavior: 'smooth' });
 }
@@ -1286,6 +1346,7 @@ function closeForm() {
   formSection.classList.add("hidden");
   form.reset();
   clearFileNames();
+  resetProgressBars();
   formMessages.innerHTML = '';
 }
 
@@ -1293,6 +1354,21 @@ function clearFileNames() {
   profilePhotoName.textContent = '';
   aadhaarFrontName.textContent = '';
   aadhaarBackName.textContent = '';
+}
+
+function resetProgressBars() {
+  // Hide progress containers
+  profilePhotoProgress.classList.add('hidden');
+  aadhaarFrontProgress.classList.add('hidden');
+  aadhaarBackProgress.classList.add('hidden');
+  
+  // Reset progress bars
+  profilePhotoProgressFill.style.width = '0%';
+  profilePhotoProgressText.textContent = '0%';
+  aadhaarFrontProgressFill.style.width = '0%';
+  aadhaarFrontProgressText.textContent = '0%';
+  aadhaarBackProgressFill.style.width = '0%';
+  aadhaarBackProgressText.textContent = '0%';
 }
 
 function showMessage(message, type = 'error') {
@@ -1348,10 +1424,10 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  // File size check (2MB max)
-  const maxSize = 2 * 1024 * 1024;
+  // File size check (5MB max for Cloudinary)
+  const maxSize = 5 * 1024 * 1024;
   if (profilePhoto.size > maxSize || aadhaarFront.size > maxSize || aadhaarBack.size > maxSize) {
-    showMessage('Each image must be less than 2MB');
+    showMessage('Each image must be less than 5MB');
     return;
   }
 
@@ -1362,17 +1438,17 @@ async function handleFormSubmit(e) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     submitBtn.disabled = true;
 
-    // Step 1: Save images to storage
-    showMessage('Saving images...', 'info');
-    const imageResult = await saveImagesToStorage(profilePhoto, aadhaarFront, aadhaarBack);
+    // Step 1: Upload images to Cloudinary
+    showMessage('Uploading images to Cloudinary...', 'info');
+    const cloudinaryResult = await uploadImagesToCloudinary(profilePhoto, aadhaarFront, aadhaarBack);
     
-    if (!imageResult.success) {
-      throw new Error('Failed to save images');
+    if (!cloudinaryResult.success) {
+      throw new Error('Failed to upload images to cloud storage');
     }
 
-    // Step 2: Save member metadata to JSONBin.io (with image IDs)
-    showMessage('Saving member data to cloud...', 'info');
-    const saveResult = await saveMemberToJSONBin(name, mobile, email, imageResult);
+    // Step 2: Save member metadata to JSONBin.io (with Cloudinary URLs)
+    showMessage('Saving member data to database...', 'info');
+    const saveResult = await saveMemberToJSONBin(name, mobile, email, cloudinaryResult);
     
     if (saveResult.success) {
       // Update UI
@@ -1380,7 +1456,7 @@ async function handleFormSubmit(e) {
       updateMemberCount();
       
       // Show success
-      showMessage('✅ Member saved successfully! Images stored separately.', 'success');
+      showMessage('✅ Member saved successfully! Images stored on Cloudinary.', 'success');
       
       // Close form after delay
       setTimeout(() => {
@@ -1394,7 +1470,7 @@ async function handleFormSubmit(e) {
 
   } catch (error) {
     console.error('Form error:', error);
-    showMessage(`Error: ${error.message}. Data saved locally only.`, 'error');
+    showMessage(`Error: ${error.message}`, 'error');
     
     // Reset button
     const submitBtn = form.querySelector('.submit-btn');
@@ -1423,9 +1499,9 @@ function renderMembers() {
     const card = document.createElement("div");
     card.className = "member-card";
     card.innerHTML = `
-      <img src="${member.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+'}" 
+      <img src="${member.profilePhoto || getPlaceholderImage('profile')}" 
            alt="${member.name}" 
-           onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+'">
+           onerror="this.src='${getPlaceholderImage('profile')}'">
       <h4>${member.name}</h4>
     `;
     card.addEventListener("click", () => openProfileModal(member));
@@ -1438,17 +1514,26 @@ function updateMemberCount() {
   memberCount.textContent = `${count} member${count !== 1 ? 's' : ''}`;
 }
 
+function getPlaceholderImage(type) {
+  const placeholders = {
+    profile: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTQwIDQ0QzQ0LjQxODMgNDQgNDggNDAuNDE4MyA0OCAzNkM0OCAzMS41ODE3IDQ0LjQxODMgMjggNDAgMjhDMzUuNTgxNyAyOCAzMiAzMS41ODE3IDMyIDM2QzMyIDQwLjQxODMgMzUuNTgxNyA0NCA0MCA0NFoiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTUyIDUySDEyOEw2NCAzNkw1MiA1MloiIGZpbGw9IiNFNUU1RTUiLz4KPC9zdmc+',
+    front: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxNDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4KPC9zdmc+',
+    back: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'
+  };
+  return placeholders[type] || placeholders.profile;
+}
+
 function openProfileModal(member) {
-  document.getElementById("modalProfileImg").src = member.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTYwIDY2QzY2LjYyNzQgNjYgNzIgNjAuNjI3NCA3MiA1NEM3MiA0Ny4zNzI2IDY2LjYyNzQgNDIgNjAgNDJDNTMuMzcyNiA0MiA0OCA0Ny4zNzI2IDQ4IDU0QzQ4IDYwLjYyNzQgNTMuMzcyNiA2NiA2MCA2NloiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTc4IDc4SDE5MkwxMTYgNTRMNzggNzhaIiBmaWxsPSIjRTVFNUU1Ii8+Cjwvc3ZnPg==';
-  document.getElementById("modalProfileImg").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkZGRkUiLz4KPHBhdGggZD0iTTYwIDY2QzY2LjYyNzQgNjYgNzIgNjAuNjI3NCA3MiA1NEM3MiA0Ny4zNzI2IDY2LjYyNzQgNDIgNjAgNDJDNTMuMzcyNiA0MiA0OCA0Ny4zNzI2IDQ4IDU0QzQ4IDYwLjYyNzQgNTMuMzcyNiA2NiA2MCA2NloiIGZpbGw9IiNFNUU1RTUiLz4KPHBhdGggZD0iTTc4IDc4SDE5MkwxMTYgNTRMNzggNzhaIiBmaWxsPSIjRTVFNUU1Ii8+Cjwvc3ZnPg=='";
+  document.getElementById("modalProfileImg").src = member.profilePhoto || getPlaceholderImage('profile');
+  document.getElementById("modalProfileImg").onerror = `this.src='${getPlaceholderImage('profile')}'`;
   document.getElementById("modalProfileImg").alt = member.name;
   document.getElementById("modalName").textContent = member.name;
   document.getElementById("modalMobile").textContent = member.mobile;
   document.getElementById("modalEmail").textContent = member.email;
-  document.getElementById("modalAadhaarFront").src = member.aadhaarFront || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxNDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+Cjwvc3ZnPg==';
-  document.getElementById("modalAadhaarFront").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8cmVjdCB4PSI1MCIgeT0iNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIi8+CjxyZWN0IHg9IjUwIiB5PSIxMTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAiIHJ4PSI0IiBmaWxsPSIjQ0NDQ0NDIiLz4KPHJlY3QgeD0iNTAiIHk9IjE0MCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'";
-  document.getElementById("modalAadhaarBack").src = member.aadhaarBack || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+';
-  document.getElementById("modalAadhaarBack").onerror = "this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiByeD0iOCIgZmlsbD0iI0ZGRkZGRSIvPgo8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMjEwIiByeD0iNCIgZmlsbD0iI0U1RTVFNSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSI5MCIgcj0iNDAiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPHJlY3QgeD0iNTAiIHk9IjE4MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMCIgcng9IjQiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'";
+  document.getElementById("modalAadhaarFront").src = member.aadhaarFront || getPlaceholderImage('front');
+  document.getElementById("modalAadhaarFront").onerror = `this.src='${getPlaceholderImage('front')}'`;
+  document.getElementById("modalAadhaarBack").src = member.aadhaarBack || getPlaceholderImage('back');
+  document.getElementById("modalAadhaarBack").onerror = `this.src='${getPlaceholderImage('back')}'`;
   
   modal.classList.remove("hidden");
   document.body.style.overflow = 'hidden';
@@ -1463,7 +1548,6 @@ function closeProfileModal() {
 window.addEventListener('error', function(e) {
   if (e.target.tagName === 'IMG') {
     console.log('Image failed to load:', e.target.src);
-    // We're already handling errors with inline onerror attributes
   }
 }, true);
 </script>
